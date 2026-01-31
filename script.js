@@ -1,7 +1,7 @@
 // 初始化场景
 const scene = new THREE.Scene();
 // 设置深色渐变背景
-scene.background = new THREE.Color(0x0a0a2a); // 深蓝紫色背景
+scene.background = new THREE.Color(0x2a2a4a); // 稍微亮一些的深蓝紫色背景
 
 // 初始化相机
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -69,11 +69,11 @@ for (let row = 0; row < rows; row++) {
 }
 
 // 光照系统
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // 柔和环境光
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // 增加环境光强度
 scene.add(ambientLight);
 
 // 日光源（模拟太阳）
-const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.2); // 增加强度
 sunLight.position.set(5, 10, 7);
 sunLight.castShadow = true;
 sunLight.shadow.mapSize.width = 2048;
@@ -81,12 +81,12 @@ sunLight.shadow.mapSize.height = 2048;
 scene.add(sunLight);
 
 // 补充光源
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.7); // 增加强度
 fillLight.position.set(-5, 5, -5);
 scene.add(fillLight);
 
 // 雾效增加景深
-scene.fog = new THREE.FogExp2(0x0a0a2a, 0.02);
+scene.fog = new THREE.FogExp2(0x2a2a4a, 0.02); // 匹配背景
 
 // 处理窗口大小变化
 window.addEventListener('resize', () => {
