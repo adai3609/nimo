@@ -5,7 +5,7 @@ scene.background = new THREE.Color(0x0a0a2a); // 深蓝紫色背景
 
 // 初始化相机
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 0, 30);
+camera.position.set(0, 15, 30);
 camera.lookAt(0, 0, 0);
 
 // 初始化渲染器
@@ -23,53 +23,20 @@ scene.add(cardGroup);
 // 卡片参数
 const rows = 25;
 const cols = 25;
-const spacing = 1.0;
+const spacing = 0.8; // 更小的间距
 
-// 创建半透明材质
-const materials = [
-    new THREE.MeshPhysicalMaterial({
-        color: 0x8a8aff, // 淡蓝色
-        transparent: true,
-        opacity: 0.7,
-        metalness: 0.2,
-        roughness: 0.4,
-        reflectivity: 0.3,
-        clearcoat: 0.5,
-        side: THREE.DoubleSide
-    }),
-    new THREE.MeshPhysicalMaterial({
-        color: 0xaa8aff, // 淡紫色
-        transparent: true,
-        opacity: 0.7,
-        metalness: 0.2,
-        roughness: 0.4,
-        reflectivity: 0.3,
-        clearcoat: 0.5,
-        side: THREE.DoubleSide
-    }),
-    new THREE.MeshPhysicalMaterial({
-        color: 0x8affc3, // 淡绿色
-        transparent: true,
-        opacity: 0.7,
-        metalness: 0.2,
-        roughness: 0.4,
-        reflectivity: 0.3,
-        clearcoat: 0.5,
-        side: THREE.DoubleSide
-    }),
-    new THREE.MeshPhysicalMaterial({
-        color: 0xffb38a, // 淡橙色
-        transparent: true,
-        opacity: 0.7,
-        metalness: 0.2,
-        roughness: 0.4,
-        reflectivity: 0.3,
-        clearcoat: 0.5,
-        side: THREE.DoubleSide
-    })
-];
+// 创建镜面金属材质
+const metalMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff, // 白色基础色
+    metalness: 0.95, // 高金属度
+    roughness: 0.05, // 低粗糙度实现镜面效果
+    clearcoat: 1.0,  // 清漆层增强反射
+    clearcoatRoughness: 0.05,
+    reflectivity: 0.9,
+    side: THREE.DoubleSide
+});
 
-// 创建波浪效果的卡片网格
+// 创建波浪效果的卡片网格（平放）
 const cards = [];
 for (let row = 0; row < rows; row++) {
     cards[row] = [];
@@ -78,10 +45,9 @@ for (let row = 0; row < rows; row++) {
         const x = (col - cols / 2) * spacing;
         const z = (row - rows / 2) * spacing;
         
-        // 创建薄长方体（厚度较薄）
-        const geometry = new THREE.BoxGeometry(0.8, 0.8, 0.2);
-        const material = materials[(row + col) % materials.length];
-        const card = new THREE.Mesh(geometry, material);
+        // 创建薄平面（平放，不是竖立）
+        const geometry = new THREE.BoxGeometry(0.7, 0.1, 0.7); // 长宽接近，厚度很薄
+        const card = new THREE.Mesh(geometry, metalMaterial);
         
         // 设置初始位置
         card.position.set(x, 0, z);
@@ -103,17 +69,21 @@ for (let row = 0; row < rows; row++) {
 }
 
 // 光照系统
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // 暖色环境光
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.3); // 柔和环境光
 scene.add(ambientLight);
 
-const mainLight = new THREE.PointLight(0x88ccff, 1, 100); // 冷色主光源
-mainLight.position.set(10, 20, 15);
-mainLight.castShadow = true;
-scene.add(mainLight);
+// 日光源（模拟太阳）
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
+sunLight.position.set(5, 10, 7);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+scene.add(sunLight);
 
-const secondaryLight = new THREE.PointLight(0xffaa88, 0.5, 100); // 辅助光源
-secondaryLight.position.set(-10, -15, -10);
-scene.add(secondaryLight);
+// 补充光源
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+fillLight.position.set(-5, 5, -5);
+scene.add(fillLight);
 
 // 雾效增加景深
 scene.fog = new THREE.FogExp2(0x0a0a2a, 0.02);
@@ -127,9 +97,9 @@ window.addEventListener('resize', () => {
 
 // 波浪参数
 const waveParams = {
-    amplitude: 2.0,
-    speed: 0.5,
-    frequency: 0.3,
+    amplitude: 1.5, // 稍微降低振幅，因为是平放
+    speed: 0.6,
+    frequency: 0.4,
     complexity: 2 // 叠加层数
 };
 
@@ -165,29 +135,17 @@ function animate() {
                 ) * (waveParams.amplitude * 0.6);
             }
             
-            // 第三层波浪 (如果需要更高复杂性)
-            if (waveParams.complexity > 2) {
-                height += Math.sin(
-                    time * waveParams.speed * 1.3 + 
-                    card.userData.phaseOffset * 0.7 + 
-                    card.position.x * waveParams.frequency * 0.6 + 
-                    card.position.z * waveParams.frequency * 1.4
-                ) * (waveParams.amplitude * 0.4);
-            }
-            
             // 应用波浪效果到Y坐标
             card.position.y = height;
             
-            // 添加轻微的旋转效果以增强立体感
-            card.rotation.x = Math.sin(time * 0.5 + card.userData.phaseOffset) * 0.1;
-            card.rotation.y = Math.cos(time * 0.4 + card.userData.phaseOffset) * 0.1;
-            card.rotation.z = Math.sin(time * 0.3 + card.userData.phaseOffset) * 0.05;
+            // 添加轻微的旋转效果以增强立体感（波浪旋转效果）
+            card.rotation.x = Math.sin(time * 0.5 + card.userData.phaseOffset) * 0.05;
+            card.rotation.z = Math.cos(time * 0.4 + card.userData.phaseOffset) * 0.05;
         }
     }
     
     // 缓慢自动旋转整个卡片组，提供多角度观看
-    cardGroup.rotation.y = time * 0.05;
-    cardGroup.rotation.x = Math.sin(time * 0.1) * 0.05;
+    cardGroup.rotation.y = time * 0.03;
     
     renderer.render(scene, camera);
 }
@@ -232,7 +190,7 @@ document.addEventListener('mousemove', (e) => {
         const mouseY = (e.clientY - window.innerHeight / 2) / 100;
         
         camera.position.x = mouseX * 2;
-        camera.position.y = mouseY * 2;
+        camera.position.y = 15 + mouseY; // 保持高度
         camera.lookAt(0, 0, 0);
     }
 });
@@ -240,5 +198,5 @@ document.addEventListener('mousemove', (e) => {
 // 滚轮缩放
 document.addEventListener('wheel', (e) => {
     camera.position.z += e.deltaY * 0.01;
-    camera.position.z = Math.max(10, Math.min(50, camera.position.z)); // 限制缩放范围
+    camera.position.z = Math.max(15, Math.min(50, camera.position.z)); // 限制缩放范围
 });
