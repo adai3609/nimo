@@ -1,15 +1,7 @@
 // 初始化场景
 const scene = new THREE.Scene();
-scene.background = new THREE.LinearGradient(0.1, 0.1, 0.2, 0.2, 0.3, 0.4); // 深色渐变背景
-// 创建渐变背景
-const canvas = document.createElement('canvas');
-canvas.width = 1;
-canvas.height = 1;
-const ctx = canvas.getContext('2d');
-ctx.fillStyle = '#0a0a1a';
-ctx.fillRect(0, 0, 1, 1);
-const texture = new THREE.CanvasTexture(canvas);
-scene.background = texture;
+// 设置深色渐变背景
+scene.background = new THREE.Color(0x0a0a2a); // 深蓝紫色背景
 
 // 初始化相机
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
