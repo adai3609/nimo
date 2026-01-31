@@ -1,7 +1,7 @@
 // 初始化场景
 const scene = new THREE.Scene();
-// 设置深色渐变背景
-scene.background = new THREE.Color(0x2a2a4a); // 稍微亮一些的深蓝紫色背景
+// 设置浅色背景
+scene.background = new THREE.Color(0x88aadd); // 浅蓝灰色背景，更明亮
 
 // 初始化相机
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -12,7 +12,7 @@ camera.lookAt(0, 0, 0);
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = false; // 关闭阴影以提高亮度
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
@@ -25,15 +25,17 @@ const rows = 25;
 const cols = 25;
 const spacing = 0.8; // 更小的间距
 
-// 创建镜面金属材质
+// 创建高反射镜面金属材质
 const metalMaterial = new THREE.MeshPhysicalMaterial({
     color: 0xffffff, // 白色基础色
-    metalness: 0.95, // 高金属度
-    roughness: 0.05, // 低粗糙度实现镜面效果
+    metalness: 0.9, // 高金属度
+    roughness: 0.1, // 低粗糙度实现镜面效果
     clearcoat: 1.0,  // 清漆层增强反射
     clearcoatRoughness: 0.05,
     reflectivity: 0.9,
-    side: THREE.DoubleSide
+    side: THREE.DoubleSide,
+    emissive: 0x444444, // 添加自发光使在暗处也能看到
+    emissiveIntensity: 0.3
 });
 
 // 创建波浪效果的卡片网格（平放）
@@ -60,33 +62,32 @@ for (let row = 0; row < rows; row++) {
             phaseOffset: (row + col) * 0.1 // 随机相位偏移
         };
         
-        card.castShadow = true;
-        card.receiveShadow = true;
+        card.castShadow = false;
+        card.receiveShadow = false;
         
         cardGroup.add(card);
         cards[row][col] = card;
     }
 }
 
-// 光照系统
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); // 增加环境光强度
+// 光照系统 - 大幅增加光照
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8); // 大幅增加环境光
 scene.add(ambientLight);
 
 // 日光源（模拟太阳）
-const sunLight = new THREE.DirectionalLight(0xffffff, 1.2); // 增加强度
-sunLight.position.set(5, 10, 7);
-sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048;
-sunLight.shadow.mapSize.height = 2048;
+const sunLight = new THREE.DirectionalLight(0xffffff, 1.5); // 极大增加强度
+sunLight.position.set(10, 20, 10);
+sunLight.castShadow = false;
 scene.add(sunLight);
 
-// 补充光源
-const fillLight = new THREE.DirectionalLight(0xffffff, 0.7); // 增加强度
-fillLight.position.set(-5, 5, -5);
-scene.add(fillLight);
+// 额外的填充光源
+const fillLight1 = new THREE.DirectionalLight(0xffffff, 1.0);
+fillLight1.position.set(-10, 10, -10);
+scene.add(fillLight1);
 
-// 雾效增加景深
-scene.fog = new THREE.FogExp2(0x2a2a4a, 0.02); // 匹配背景
+const fillLight2 = new THREE.DirectionalLight(0xffffff, 0.8);
+fillLight2.position.set(0, 15, -15);
+scene.add(fillLight2);
 
 // 处理窗口大小变化
 window.addEventListener('resize', () => {
@@ -97,7 +98,7 @@ window.addEventListener('resize', () => {
 
 // 波浪参数
 const waveParams = {
-    amplitude: 1.5, // 稍微降低振幅，因为是平放
+    amplitude: 1.5,
     speed: 0.6,
     frequency: 0.4,
     complexity: 2 // 叠加层数
